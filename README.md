@@ -1,14 +1,19 @@
 # PocketBook Scripts
 Bash-scripts for PocketBook 631.
 
+# Hot to use
+* Rename from `.sh` to `.app`.
+* Move to `flash_root/applications` dir on PocketBook.
+* Run app on PocketBook through menu item icon.
+
 ## WebDAV
-Inspired with [this](https://www.e-reader-forum.de/ebook-reader/pocketbook/27169-own-cloud-webdav-synchronisation-fuer-pb-touch-hd/) and [this](https://github.com/cghdev/cloud-dl).
+Inspired by [this](https://www.e-reader-forum.de/ebook-reader/pocketbook/27169-own-cloud-webdav-synchronisation-fuer-pb-touch-hd/) and [this](https://github.com/cghdev/cloud-dl).
 
 For now, it can do only follows:
 * synchronize new files,
 * update changed files based on date.
 
-__Important restriction:__
+__Important restrictions:__
 * script synchronize only first level of directory hierarchy without nested directories;
 * script doesn't remove anything from local directory.
 
