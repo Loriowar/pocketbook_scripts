@@ -58,6 +58,39 @@ url_decode() {
 }
 
 
+allFiles=''
+currentDir=$remote_dir_name
+
+getFilesRec()
+{
+    currentDirAbs="$remote_host$remote_path_suffix$currentDir"
+
+
+    dirsAndFiles=$(curl --silent --user "$user":"$passwd" $currentDirAbs -X PROPFIND --data '<?xml version="1.0"?>
+    <a:propfind xmlns:a="DAV:">
+    <a:prop>
+    <a:resourcetype />
+    </a:prop>
+    </a:propfind>'  | grep 'href' | sed 's/<\/\?[^>]\+>//g' | sed 's/HTTP\/1.1 200 OK/\n/g' | sed "s/\/owncloud\/remote.php\/dav\/files\/BA99A208-AF10-40AD-9F39-C01D5CEF0EDB\///g" | grep -v '^$')
+
+    dirs=$(echo "$dirsAndFiles" | grep '/$')
+    files=$(echo "$dirsAndFiles" | grep -v '/$')
+
+
+    allFiles="$allFiles"$'\n'$(echo "$files" | grep '\.epub$')
+
+
+    for subDir in $dirs
+    do
+        if [ $currentDir != $subDir ]
+        then
+            currentDir=$subDir
+            getFilesRec
+        fi
+    done 
+}
+
+
 
 # Connect to the net first if necessary.
 ifconfig eth0 > /dev/null 2>&1
@@ -75,22 +108,10 @@ if [ $? -ne 0 ]; then
 fi
 
 # Saves a list of all remote files in $files
-# In another world we can use "grep -oP "(?<=<d:href>)[^<]+"" instead of multiple ugly sed's
-files=$(\
-curl --silent --user "$user":"$passwd" "$full_url" -X PROPFIND \
---data '<?xml version="1.0"?>
-<a:propfind xmlns:a="DAV:">
-<a:prop>
-<a:resourcetype />
-</a:prop>
-</a:propfind>' | grep 'href' | sed 's/<\/\?[^>]\+>//g' | sed 's/HTTP\/1.1 200 OK/\n/g' | sed "s/$escaped_remote_path\///g" | grep -v '^$')
+getFilesRec
+files=$(echo "$allFiles" | grep -v '^$')
 
-# For sync directory recursively we can try to use follows:
-# wget -r -nH -np --cut-dirs=1 --no-check-certificate -U Mozilla --user={uname} --password={pwd} https://my-host/my-webdav-dir/my-dir-in-webdav
-# from here: https://askubuntu.com/questions/104046/how-do-i-recursively-copy-download-a-whole-webdav-directory
-# But in this case any time will be processed full directory fetch. This is very expensive, especially for big library.
-
-files_count=$(echo $file | wc -l)
+files_count=$(echo $files | wc -l)
 /ebrmain/bin/dialog 1 "" "We found $files_count file(s) in remote dir "$remote_dir_name"" "OK"
 
 # debug
