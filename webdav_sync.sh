@@ -5,6 +5,7 @@ user="user"
 passwd="password"
 remote_host="https://example.com"
 remote_path_suffix="/my_cloud_path/remote.php/webdav/"
+escaped_remote_path_suffix=$(echo $remote_path_suffix | sed "s/\//\\\\\//g")
 remote_dir_name="DirForSyncFromRemoteSide"
 
 remote_path="$remote_path_suffix$remote_dir_name"
@@ -71,7 +72,7 @@ getFilesRec()
     <a:prop>
     <a:resourcetype />
     </a:prop>
-    </a:propfind>'  | grep 'href' | sed 's/<\/\?[^>]\+>//g' | sed 's/HTTP\/1.1 200 OK/\n/g' | sed "s/\/owncloud\/remote.php\/dav\/files\/BA99A208-AF10-40AD-9F39-C01D5CEF0EDB\///g" | grep -v '^$')
+    </a:propfind>'  | grep 'href' | sed 's/<\/\?[^>]\+>//g' | sed 's/HTTP\/1.1 200 OK/\n/g' | sed "s/$escaped_remote_path_suffix//g" | grep -v '^$')
 
     dirs=$(echo "$dirsAndFiles" | grep '/$')
     files=$(echo "$dirsAndFiles" | grep -v '/$')
